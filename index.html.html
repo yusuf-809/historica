@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Historica — The Age of Industry Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1008;
+    --parchment: #f5edd6;
+    --parchment-dark: #e8d9b5;
+    --parchment-deeper: #d4c090;
+    --sepia: #8b5e3c;
+    --sepia-light: #c49a6c;
+    --crimson: #8b1a1a;
+    --gold: #c9920a;
+    --gold-light: #e8b84b;
+    --teal-dark: #1a4a4a;
+    --teal: #2d6a6a;
+    --correct: #2d5a2d;
+    --correct-light: #e8f5e8;
+    --wrong: #8b1a1a;
+    --wrong-light: #fde8e8;
+    --shadow: rgba(26,16,8,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Crimson Pro', serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 10% 10%, rgba(139,94,60,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 90%, rgba(139,26,26,0.05) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  /* ── ORNAMENTAL HEADER ── */
+  .brand {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .brand-rule {
+    display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0;
+  }
+  .brand-rule::before, .brand-rule::after {
+    content: ''; flex: 1; height: 1px; background: linear-gradient(to right, transparent, var(--sepia-light), transparent);
+  }
+  .brand-ornament { color: var(--gold); font-size: 1.2rem; }
+  .brand h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 900;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    line-height: 1;
+    text-shadow: 2px 2px 0 var(--parchment-dark), 4px 4px 8px var(--shadow);
+  }
+  .brand .subtitle {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.9rem;
+    letter-spacing: 0.25em;
+    color: var(--sepia);
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+  }
+
+  /* ── CARDS / PANELS ── */
+  .panel {
+    background: var(--parchment);
+    border: 1px solid var(--parchment-deeper);
+    border-radius: 4px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 4px 24px var(--shadow), inset 0 0 80px rgba(201,146,10,0.03);
+    position: relative;
+    max-width: 520px;
+    width: 90%;
+  }
+  .panel::before {
+    content: '';
+    position: absolute; inset: 6px;
+    border: 1px solid var(--parchment-deeper);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.9rem 2rem;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--parchment);
+    box-shadow: 3px 3px 0 var(--sepia);
+  }
+  .btn-primary:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--sepia); }
+  .btn-primary:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--sepia); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--parchment-deeper);
+  }
+  .btn-secondary:hover { background: var(--parchment-dark); border-color: var(--sepia-light); }
+
+  .btn-danger {
+    background: var(--crimson);
+    color: var(--parchment);
+    box-shadow: 3px 3px 0 #5a1010;
+  }
+  .btn-danger:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #5a1010; }
+
+  .btn-lg { font-size: 1rem; padding: 1.1rem 2.5rem; }
+  .btn-full { width: 100%; }
+
+  /* ── INPUTS ── */
+  .input-group { margin-bottom: 1.25rem; }
+  .input-group label {
+    display: block;
+    font-family: 'Special Elite', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sepia);
+    margin-bottom: 0.5rem;
+  }
+  .input-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--parchment-dark);
+    border: 1px solid var(--parchment-deeper);
+    border-radius: 2px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .input-group input:focus { border-color: var(--sepia-light); background: var(--parchment); }
+
+  /* ── HOME SCREEN ── */
+  #home-screen { padding: 2rem; gap: 2rem; }
+  .home-actions { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; }
+
+  /* ── LOBBY ── */
+  #lobby-screen, #join-screen { padding: 2rem; gap: 1.5rem; }
+  .room-code-display {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--ink);
+    border-radius: 2px;
+    margin: 1rem 0;
+  }
+  .room-code-label {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sepia-light);
+  }
+  .room-code-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--gold-light);
+    letter-spacing: 0.15em;
+  }
+  .player-list { list-style: none; margin-top: 0.5rem; }
+  .player-list li {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--parchment-dark);
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 1.05rem;
+  }
+  .player-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--sepia);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; font-size: 0.85rem;
+    color: var(--parchment);
+    flex-shrink: 0;
+  }
+  .player-host-badge {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.65rem; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--gold); color: var(--ink);
+    padding: 2px 6px; border-radius: 2px;
+    margin-left: auto;
+  }
+
+  /* ── QUESTION / GAME SCREEN ── */
+  #game-screen { padding: 1rem; align-items: stretch; gap: 0; justify-content: flex-start; }
+  .game-header {
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 0.75rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+  }
+  .game-header-brand {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; font-size: 1.1rem;
+    color: var(--gold-light);
+  }
+  .game-progress {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.75rem; letter-spacing: 0.15em;
+    color: var(--sepia-light);
+  }
+  .game-score {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700; font-size: 1.1rem;
+    color: var(--gold-light);
+  }
+
+  .timer-bar-wrap { height: 6px; background: var(--parchment-dark); position: relative; }
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(to right, var(--gold), var(--crimson));
+    transition: width 1s linear;
+    width: 100%;
+  }
+
+  .game-body {
+    flex: 1;
+    display: flex; flex-direction: column;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .hint-box {
+    background: var(--teal-dark);
+    color: var(--parchment-light, #f5edd6);
+    border-radius: 2px;
+    padding: 1rem 1.25rem;
+    border-left: 4px solid var(--gold);
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .hint-box .hint-label {
+    font-family: 'Special Elite', monospace;
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: 0.4rem;
+  }
+
+  .question-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.3rem, 3vw, 1.75rem);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.35;
+    text-align: center;
+  }
+
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  @media (max-width: 500px) { .answers-grid { grid-template-columns: 1fr; } }
+
+  .answer-btn {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    border-radius: 2px;
+    border: 1.5px solid var(--parchment-deeper);
+    background: var(--parchment);
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    line-height: 1.35;
+    box-shadow: 2px 2px 0 var(--parchment-darker, #c4b080);
+  }
+  .answer-btn:hover:not(:disabled) {
+    background: var(--parchment-dark);
+    border-color: var(--sepia-light);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--parchment-deeper);
+  }
+  .answer-btn .answer-letter {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.8rem;
+    width: 22px; height: 22px;
+    background: var(--ink); color: var(--parchment);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .answer-btn.correct {
+    background: #d4edda; border-color: var(--correct);
+    box-shadow: 2px 2px 0 var(--correct);
+  }
+  .answer-btn.correct .answer-letter { background: var(--correct); }
+  .answer-btn.wrong {
+    background: #f8d7da; border-color: var(--crimson);
+    box-shadow: 2px 2px 0 var(--crimson);
+  }
+  .answer-btn.wrong .answer-letter { background: var(--crimson); }
+  .answer-btn.revealed {
+    opacity: 0.55;
+  }
+  .answer-btn:disabled { cursor: default; }
+
+  /* ── RESULT FEEDBACK ── */
+  .feedback-overlay {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 2px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .feedback-overlay.show { opacity: 1; }
+  .feedback-overlay.correct-fb { background: #d4edda; color: var(--correct); }
+  .feedback-overlay.wrong-fb { background: #f8d7da; color: var(--crimson); }
+
+  /* ── LEADERBOARD ── */
+  #leaderboard-screen { padding: 2rem; gap: 1.5rem; align-items: center; }
+  .lb-header {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--sepia);
+    margin-bottom: 0.5rem;
+  }
+  .lb-list { list-style: none; width: 100%; max-width: 480px; }
+  .lb-item {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--parchment-dark);
+    animation: slideIn 0.4s ease both;
+  }
+  .lb-item:nth-child(1) { animation-delay: 0.05s; }
+  .lb-item:nth-child(2) { animation-delay: 0.1s; }
+  .lb-item:nth-child(3) { animation-delay: 0.15s; }
+  .lb-item:nth-child(4) { animation-delay: 0.2s; }
+  .lb-item:nth-child(n+5) { animation-delay: 0.25s; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-16px); }
+    to { opacity: 1; transform: none; }
+  }
+  .lb-rank {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900; font-size: 1.4rem;
+    width: 36px; text-align: center;
+    color: var(--sepia-light);
+  }
+  .lb-item.rank-1 .lb-rank { color: var(--gold); font-size: 1.6rem; }
+  .lb-item.rank-2 .lb-rank { color: #a0a0a0; }
+  .lb-item.rank-3 .lb-rank { color: var(--sepia); }
+  .lb-name { flex: 1; font-size: 1.1rem; font-weight: 600; }
+  .lb-score {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.9rem; color: var(--sepia);
+  }
+
+  /* ── FINAL SCREEN ── */
+  #final-screen { padding: 2rem; gap: 1.5rem; text-align: center; }
+  .trophy {
+    font-size: 4rem; line-height: 1;
+    filter: drop-shadow(0 4px 8px var(--shadow));
+  }
+  .final-winner {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; color: var(--sepia);
+  }
+  .final-winner strong {
+    display: block;
+    font-size: 2.2rem; font-weight: 900;
+    color: var(--ink);
+  }
+
+  /* ── WAITING ── */
+  .waiting-pulse {
+    display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gold);
+    animation: pulse 1.2s infinite;
+    margin-left: 0.5rem;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+  /* ── HOST WAITING BANNER ── */
+  .host-banner {
+    background: var(--gold);
+    color: var(--ink);
+    text-align: center;
+    padding: 0.6rem;
+    font-family: 'Special Elite', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .section-title {
+    font-family: 'Special Elite', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sepia);
+    margin-bottom: 0.75rem;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--parchment-deeper), transparent);
+    margin: 1rem 0;
+  }
+
+  /* ── FACT BOX ── */
+  .fact-reveal {
+    background: var(--parchment-dark);
+    border: 1px solid var(--parchment-deeper);
+    border-radius: 2px;
+    padding: 1rem 1.25rem;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--sepia);
+    line-height: 1.6;
+    margin-top: 0.5rem;
+  }
+  .fact-reveal .fact-label {
+    font-family: 'Special Elite', monospace;
+    font-style: normal;
+    font-size: 0.7rem; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .btn-row { display: flex; gap: 0.75rem; width: 100%; }
+  .btn-row .btn { flex: 1; }
+
+  #copy-btn { font-size: 0.75rem; padding: 0.4rem 0.75rem; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HOME SCREEN
+══════════════════════════════════════════ -->
+<div id="home-screen" class="screen active">
+  <div class="brand">
+    <div class="brand-rule"><span class="brand-ornament">✦</span></div>
+    <h1>Historica</h1>
+    <div class="brand-rule"><span class="brand-ornament">✦</span></div>
+    <p class="subtitle">The Age of Industry · 1850–1910</p>
+  </div>
+  <div class="panel">
+    <p class="section-title">Choose your role</p>
+    <div class="home-actions">
+      <button class="btn btn-primary btn-lg btn-full" onclick="showHostSetup()">⚑ &nbsp;Host a Game</button>
+      <button class="btn btn-secondary btn-lg btn-full" onclick="showJoinScreen()">⊕ &nbsp;Join with Code</button>
+    </div>
+    <div class="divider"></div>
+    <p style="text-align:center; font-size:0.9rem; color:var(--sepia); line-height:1.6;">
+      Test your knowledge of the great events that shaped the modern world — from the American Civil War to the Wright Brothers' first flight.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     HOST SETUP SCREEN
+══════════════════════════════════════════ -->
+<div id="host-setup-screen" class="screen">
+  <div class="brand">
+    <div class="brand-rule"><span class="brand-ornament">✦</span></div>
+    <h1>Historica</h1>
+    <div class="brand-rule"><span class="brand-ornament">✦</span></div>
+  </div>
+  <div class="panel">
+    <p class="section-title">Host Setup</p>
+    <div class="input-group">
+      <label>Your Name</label>
+      <input type="text" id="host-name-input" placeholder="e.g. Professor Hawthorne" maxlength="20">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="createRoom()">Create Room & Get Code</button>
+    <div class="divider"></div>
+    <button class="btn btn-secondary btn-full" onclick="showScreen('home-screen')">← Back</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JOIN SCREEN
+══════════════════════════════════════════ -->
+<div id="join-screen" class="screen">
+  <div class="brand">
+    <div class="brand-rule"><span class="brand-ornament">✦</span></div>
+    <h1>Historica</h1>
+    <div class="brand-rule"><span class="brand-ornament">✦</span></div>
+  </div>
+  <div class="panel">
+    <p class="section-title">Join a Game</p>
+    <div class="input-group">
+      <label>Your Name</label>
+      <input type="text" id="join-name-input" placeholder="e.g. Lady Pemberton" maxlength="20">
+    </div>
+    <div class="input-group">
+      <label>Room Code</label>
+      <input type="text" id="join-code-input" placeholder="e.g. HIST" maxlength="6" style="text-transform:uppercase; letter-spacing:0.25em; font-family:'Special Elite',monospace; font-size:1.4rem;">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="joinRoom()">Enter the Chamber</button>
+    <div class="divider"></div>
+    <button class="btn btn-secondary btn-full" onclick="showScreen('home-screen')">← Back</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LOBBY SCREEN (Host view)
+══════════════════════════════════════════ -->
+<div id="lobby-screen" class="screen">
+  <div class="host-banner">⚑ You are the Host — Share the code below</div>
+  <div style="padding: 2rem; display:flex; flex-direction:column; align-items:center; gap:1.5rem; width:100%;">
+    <div class="panel" style="max-width:480px;">
+      <p class="section-title">Room Code</p>
+      <div class="room-code-display">
+        <div class="room-code-label">Share this code with players</div>
+        <div class="room-code-value" id="display-room-code">—</div>
+        <button class="btn btn-secondary" id="copy-btn" onclick="copyCode()" style="margin-top:0.75rem; color:var(--parchment); border-color:rgba(255,255,255,0.2);">⎘ Copy</button>
+      </div>
+      <p class="section-title">Players <span class="waiting-pulse"></span></p>
+      <ul class="player-list" id="lobby-player-list"></ul>
+      <div class="divider"></div>
+      <button class="btn btn-primary btn-full btn-lg" id="start-game-btn" onclick="startGame()">Begin the Quiz →</button>
+      <p style="text-align:center; font-size:0.85rem; color:var(--sepia); margin-top:0.75rem;">Need at least 1 player to start</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     WAITING SCREEN (Player view)
+══════════════════════════════════════════ -->
+<div id="waiting-screen" class="screen">
+  <div class="panel" style="text-align:center;">
+    <p class="section-title">Waiting Room</p>
+    <div class="room-code-display">
+      <div class="room-code-label">Room Code</div>
+      <div class="room-code-value" id="waiting-room-code">—</div>
+    </div>
+    <p style="font-size:1.1rem; margin:1rem 0;">Waiting for the host to begin<span class="waiting-pulse"></span></p>
+    <ul class="player-list" id="waiting-player-list" style="margin-top:1rem;"></ul>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     GAME SCREEN
+══════════════════════════════════════════ -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <div class="game-header-brand">Historica</div>
+    <div class="game-progress" id="q-progress">Q 1 / 13</div>
+    <div class="game-score" id="my-score">0 pts</div>
+  </div>
+  <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+
+  <div class="game-body">
+    <div class="hint-box" id="hint-box">
+      <div class="hint-label">📜 Dispatches from the Archives</div>
+      <span id="hint-text"></span>
+    </div>
+
+    <div class="question-text" id="question-text"></div>
+
+    <div class="answers-grid" id="answers-grid"></div>
+
+    <div class="feedback-overlay" id="feedback-overlay"></div>
+    <div class="fact-reveal" id="fact-reveal" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LEADERBOARD (between questions)
+══════════════════════════════════════════ -->
+<div id="leaderboard-screen" class="screen">
+  <div class="brand" style="margin-bottom:0;">
+    <h1 style="font-size:2.5rem;">Standings</h1>
+  </div>
+  <div class="lb-header" id="lb-subtitle"></div>
+  <ul class="lb-list" id="lb-list"></ul>
+  <div id="lb-host-controls" style="display:none; width:100%; max-width:480px;">
+    <button class="btn btn-primary btn-full btn-lg" onclick="nextQuestion()">Next Question →</button>
+  </div>
+  <div id="lb-player-waiting" style="display:none;">
+    <p style="color:var(--sepia);">Waiting for host<span class="waiting-pulse"></span></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FINAL SCREEN
+══════════════════════════════════════════ -->
+<div id="final-screen" class="screen">
+  <div class="trophy">🏆</div>
+  <div class="brand"><h1 style="font-size:2.5rem;">Game Over</h1></div>
+  <div class="final-winner">
+    <span>Champion of the Age</span>
+    <strong id="final-winner-name">—</strong>
+  </div>
+  <ul class="lb-list" id="final-lb-list" style="max-width:480px; width:100%;"></ul>
+  <div class="btn-row" style="max-width:480px; width:90%;">
+    <button class="btn btn-secondary btn-full" onclick="showScreen('home-screen'); resetAll();">← Home</button>
+    <button class="btn btn-primary btn-full" onclick="resetAll(); createRoom();" id="play-again-btn" style="display:none;">Play Again</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// QUESTIONS DATABASE (13 historic events 1850–1910)
+// ══════════════════════════════════════════
+const QUESTIONS = [
+  {
+    year: 1853,
+    hint: "A commodore from the United States sailed into a Japanese harbour with steam-powered 'Black Ships,' demanding the island nation open its ports after 200 years of near-total isolation.",
+    question: "Which American Commodore forced Japan to open its ports to trade in 1853?",
+    answers: ["Matthew Perry","John Paul Jones","David Farragut","Winfield Scott"],
+    correct: 0,
+    fact: "Commodore Perry's fleet arrived in Uraga Harbour with four warships. His letters demanded trade rights and the Treaty of Kanagawa was signed in 1854 — ending Japan's sakoku policy."
+  },
+  {
+    year: 1859,
+    hint: "A quiet naturalist published a book that would overturn centuries of thinking about life on Earth. He had spent years aboard a survey ship studying finches, tortoises, and fossils.",
+    question: "What was the title of Charles Darwin's landmark 1859 work on natural selection?",
+    answers: ["On the Origin of Species","The Descent of Man","Principles of Geology","The Voyage of the Beagle"],
+    correct: 0,
+    fact: "On the Origin of Species sold out on its first day of publication. Darwin had delayed publishing for 20 years, fearing the controversy his ideas would cause."
+  },
+  {
+    year: 1861,
+    hint: "When Confederate artillery opened fire on a Union garrison in a South Carolina harbour at dawn, it ignited a conflict that would claim over 620,000 lives and reshape an entire nation.",
+    question: "Which fort's bombardment in 1861 officially began the American Civil War?",
+    answers: ["Fort Sumter","Fort McHenry","Fort Donelson","Fort Monroe"],
+    correct: 0,
+    fact: "The Confederate bombardment of Fort Sumter began on April 12, 1861. Major Robert Anderson surrendered after 34 hours of shelling. Remarkably, no Union soldiers died in the battle itself."
+  },
+  {
+    year: 1865,
+    hint: "An actor slipped into a theatre box during a comedy performance in Washington D.C. on Good Friday, forever changing the course of Reconstruction in America.",
+    question: "Who assassinated U.S. President Abraham Lincoln in 1865?",
+    answers: ["John Wilkes Booth","Charles Guiteau","Leon Czolgosz","Jesse James"],
+    correct: 0,
+    fact: "John Wilkes Booth shot Lincoln at Ford's Theatre on April 14, 1865 — just five days after Lee's surrender at Appomattox. Lincoln died the following morning."
+  },
+  {
+    year: 1869,
+    hint: "When a golden spike was driven at Promontory Summit in Utah Territory, two great iron roads met — allowing a journey that once took months to be completed in just days.",
+    question: "What was completed when the golden spike was driven at Promontory Summit in 1869?",
+    answers: ["The First Transcontinental Railroad","The Erie Canal expansion","The Panama Railway","The Suez Canal"],
+    correct: 0,
+    fact: "The First Transcontinental Railroad connected the Central Pacific (from Sacramento) with the Union Pacific (from Omaha). The ceremonial golden spike was driven on May 10, 1869."
+  },
+  {
+    year: 1871,
+    hint: "Following France's defeat in a devastating war, a triumphant king was proclaimed ruler of a unified nation in the Hall of Mirrors of the enemy's most famous palace.",
+    question: "In which palace was the German Empire proclaimed in January 1871?",
+    answers: ["Palace of Versailles","Charlottenburg Palace","Schönbrunn Palace","The Louvre"],
+    correct: 0,
+    fact: "King Wilhelm I of Prussia was proclaimed German Emperor in the Hall of Mirrors at Versailles on January 18, 1871 — a deliberate humiliation of France on its own soil."
+  },
+  {
+    year: 1876,
+    hint: "A Scottish-born inventor spoke the first intelligible words over a wire to his assistant in the next room: 'Mr. Watson, come here. I want to see you.'",
+    question: "Who is credited with inventing the telephone and making the first call in 1876?",
+    answers: ["Alexander Graham Bell","Thomas Edison","Nikola Tesla","Elisha Gray"],
+    correct: 0,
+    fact: "Bell was granted the telephone patent on March 7, 1876 — just hours before Elisha Gray filed a similar patent. The first call was made on March 10, 1876."
+  },
+  {
+    year: 1879,
+    hint: "Working in his Menlo Park laboratory with a team of collaborators, an inventor finally produced a glass globe that could glow steadily for 14.5 hours using a carbonised cotton thread.",
+    question: "Who developed a practical incandescent light bulb in 1879?",
+    answers: ["Thomas Edison","Nikola Tesla","Humphry Davy","Joseph Swan"],
+    correct: 0,
+    fact: "Edison's practical bulb used a carbonized bamboo filament that could last over 1,200 hours. He also designed the entire electrical distribution system to bring electricity to homes."
+  },
+  {
+    year: 1885,
+    hint: "A French gift arrived in crates — 350 individual pieces — and was assembled on an island in New York Harbour, becoming the defining symbol of liberty and welcome to millions of arriving immigrants.",
+    question: "The Statue of Liberty, gifted by France, was dedicated in which year?",
+    answers: ["1886","1885","1876","1889"],
+    correct: 0,
+    fact: "The Statue of Liberty was dedicated on October 28, 1886. Designed by sculptor Frédéric Auguste Bartholdi, its iron framework was engineered by Gustave Eiffel — who would later build his famous tower."
+  },
+  {
+    year: 1888,
+    hint: "A solitary Dutch painter, living in Arles, France, worked at a furious pace producing over 200 canvases in 15 months before a mental breakdown led him to cut off part of his own ear.",
+    question: "Which Post-Impressionist artist famously cut off his ear in 1888?",
+    answers: ["Vincent van Gogh","Paul Gauguin","Paul Cézanne","Georges Seurat"],
+    correct: 0,
+    fact: "Van Gogh severed the lower part of his left ear after an argument with Paul Gauguin in December 1888. He then wrapped it and delivered it to a woman at a local brothel."
+  },
+  {
+    year: 1896,
+    hint: "Athletes from 14 nations gathered in a Mediterranean city, competing in a stadium built in the ancient classical style, reviving a tradition that had been dormant for 1,500 years.",
+    question: "Where were the first modern Olympic Games held in 1896?",
+    answers: ["Athens, Greece","Paris, France","London, England","Rome, Italy"],
+    correct: 0,
+    fact: "The 1896 Athens Olympics featured 241 athletes from 14 nations competing in 43 events. The American James Connolly became the first modern Olympic champion, winning the triple jump."
+  },
+  {
+    year: 1903,
+    hint: "On a cold December morning in North Carolina, two brothers from Ohio achieved 12 seconds of powered, controlled, sustained flight — 120 feet across a windswept beach.",
+    question: "Which brothers made the first successful powered airplane flight at Kitty Hawk in 1903?",
+    answers: ["Orville & Wilbur Wright","Louis & Jacques Blériot","Samuel & Henry Langley","Glenn & Alexander Curtiss"],
+    correct: 0,
+    fact: "The Wright Brothers made four flights on December 17, 1903. The longest lasted 59 seconds, covering 852 feet. Their aircraft, the Flyer, is now in the Smithsonian National Air and Space Museum."
+  },
+  {
+    year: 1906,
+    hint: "At 5:12 in the morning, the earth shook violently beneath a great Pacific coast city. Gas lines ruptured, fires burned for three days, and over 3,000 people perished.",
+    question: "Which major American city was devastated by a catastrophic earthquake and fire in 1906?",
+    answers: ["San Francisco","Los Angeles","Seattle","Portland"],
+    correct: 0,
+    fact: "The 1906 San Francisco earthquake had a magnitude of 7.9. Over 3,000 people died and 225,000 were left homeless. The fires, not the earthquake itself, caused most of the destruction."
+  }
+];
+
+// Shuffle helper
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let state = {
+  isHost: false,
+  myName: '',
+  roomCode: '',
+  players: [], // [{name, score, id}]
+  myId: '',
+  currentQ: 0,
+  answered: false,
+  myScore: 0,
+  timerInterval: null,
+  timeLeft: 20,
+  questionOrder: [],
+};
+
+// ══════════════════════════════════════════
+// SCREEN UTILS
+// ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════════════════
+// HOME / NAVIGATION
+// ══════════════════════════════════════════
+function showHostSetup() { showScreen('host-setup-screen'); }
+function showJoinScreen() { showScreen('join-screen'); }
+
+// ══════════════════════════════════════════
+// ROOM MANAGEMENT (localStorage-based multiplayer simulation)
+// ══════════════════════════════════════════
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function getRoom(code) {
+  const raw = localStorage.getItem('room_' + code);
+  return raw ? JSON.parse(raw) : null;
+}
+
+function saveRoom(room) {
+  localStorage.setItem('room_' + room.code, JSON.stringify(room));
+}
+
+function createRoom() {
+  const name = document.getElementById('host-name-input').value.trim() || 'The Host';
+  const code = generateCode();
+  state.isHost = true;
+  state.myName = name;
+  state.myId = 'host_' + Date.now();
+  state.roomCode = code;
+  state.players = [{ name, score: 0, id: state.myId }];
+  state.currentQ = 0;
+  state.myScore = 0;
+  state.questionOrder = shuffle([...Array(QUESTIONS.length).keys()]).slice(0, 13);
+
+  const room = {
+    code,
+    hostId: state.myId,
+    players: state.players,
+    status: 'lobby',   // lobby | question | leaderboard | final
+    currentQ: 0,
+    questionOrder: state.questionOrder,
+    answers: {},       // playerId -> answerIndex
+  };
+  saveRoom(room);
+
+  document.getElementById('display-room-code').textContent = code;
+  renderLobbyPlayers();
+  showScreen('lobby-screen');
+  startPolling();
+}
+
+function joinRoom() {
+  const name = document.getElementById('join-name-input').value.trim() || 'Anonymous';
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (!code) return alert('Please enter a room code.');
+
+  const room = getRoom(code);
+  if (!room) return alert('Room not found. Check the code and try again.');
+  if (room.status !== 'lobby') return alert('Game already in progress. Try a new room.');
+
+  state.isHost = false;
+  state.myName = name;
+  state.myId = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  state.roomCode = code;
+  state.myScore = 0;
+  state.currentQ = 0;
+
+  room.players.push({ name, score: 0, id: state.myId });
+  saveRoom(room);
+
+  document.getElementById('waiting-room-code').textContent = code;
+  renderWaitingPlayers(room.players);
+  showScreen('waiting-screen');
+  startPolling();
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(state.roomCode).catch(() => {});
+  document.getElementById('copy-btn').textContent = '✓ Copied!';
+  setTimeout(() => { document.getElementById('copy-btn').textContent = '⎘ Copy'; }, 1500);
+}
+
+// ══════════════════════════════════════════
+// POLLING (simulate real-time via localStorage)
+// ══════════════════════════════════════════
+let pollingTimer = null;
+function startPolling() {
+  if (pollingTimer) clearInterval(pollingTimer);
+  pollingTimer = setInterval(pollRoom, 800);
+}
+function stopPolling() {
+  if (pollingTimer) clearInterval(pollingTimer);
+  pollingTimer = null;
+}
+
+let lastStatus = null;
+let lastQ = -1;
+let lastPlayerCount = 0;
+
+function pollRoom() {
+  const room = getRoom(state.roomCode);
+  if (!room) return;
+
+  const currentScreen = document.querySelector('.screen.active')?.id;
+
+  // Update player list in lobby / waiting
+  if (currentScreen === 'lobby-screen') {
+    if (room.players.length !== lastPlayerCount) {
+      lastPlayerCount = room.players.length;
+      state.players = room.players;
+      renderLobbyPlayers();
+    }
+  }
+  if (currentScreen === 'waiting-screen') {
+    renderWaitingPlayers(room.players);
+    if (room.status === 'question') {
+      state.players = room.players;
+      state.currentQ = room.currentQ;
+      state.questionOrder = room.questionOrder;
+      loadQuestion(room);
+    }
+  }
+  if (currentScreen === 'game-screen') {
+    if (room.status === 'leaderboard' && lastStatus !== 'leaderboard') {
+      lastStatus = 'leaderboard';
+      clearTimer();
+      // Sync score from room
+      const me = room.players.find(p => p.id === state.myId);
+      if (me) state.myScore = me.score;
+      showLeaderboard(room);
+    }
+  }
+  if (currentScreen === 'leaderboard-screen') {
+    if (room.status === 'question' && room.currentQ !== lastQ) {
+      lastQ = room.currentQ;
+      lastStatus = 'question';
+      state.currentQ = room.currentQ;
+      state.players = room.players;
+      loadQuestion(room);
+    }
+    if (room.status === 'final') {
+      showFinal(room);
+    }
+  }
+  lastStatus = room.status;
+}
+
+// ══════════════════════════════════════════
+// LOBBY RENDERING
+// ══════════════════════════════════════════
+function renderLobbyPlayers() {
+  const room = getRoom(state.roomCode);
+  if (!room) return;
+  const ul = document.getElementById('lobby-player-list');
+  ul.innerHTML = room.players.map(p => `
+    <li>
+      <div class="player-avatar">${p.name.slice(0,2).toUpperCase()}</div>
+      ${p.name}
+      ${p.id === state.myId ? '<span class="player-host-badge">Host</span>' : ''}
+    </li>
+  `).join('');
+}
+
+function renderWaitingPlayers(players) {
+  const ul = document.getElementById('waiting-player-list');
+  ul.innerHTML = players.map(p => `
+    <li>
+      <div class="player-avatar">${p.name.slice(0,2).toUpperCase()}</div>
+      ${p.name}
+      ${p.id === state.myId ? '<span class="player-host-badge">You</span>' : ''}
+    </li>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+// GAME FLOW — HOST
+// ══════════════════════════════════════════
+function startGame() {
+  const room = getRoom(state.roomCode);
+  if (!room) return;
+  if (room.players.length < 1) return alert('You need at least 1 player to start!');
+  room.status = 'question';
+  room.currentQ = 0;
+  room.answers = {};
+  saveRoom(room);
+  state.currentQ = 0;
+  lastQ = 0;
+  lastStatus = 'question';
+  loadQuestion(room);
+}
+
+function nextQuestion() {
+  const room = getRoom(state.roomCode);
+  if (!room) return;
+  const next = room.currentQ + 1;
+  if (next >= room.questionOrder.length) {
+    room.status = 'final';
+    saveRoom(room);
+    showFinal(room);
+  } else {
+    room.currentQ = next;
+    room.answers = {};
+    room.status = 'question';
+    saveRoom(room);
+    state.currentQ = next;
+    lastQ = next;
+    lastStatus = 'question';
+    loadQuestion(room);
+  }
+}
+
+// ══════════════════════════════════════════
+// QUESTION DISPLAY
+// ══════════════════════════════════════════
+function loadQuestion(room) {
+  stopPolling();
+  const qIndex = room.questionOrder[room.currentQ];
+  const q = QUESTIONS[qIndex];
+  state.answered = false;
+
+  document.getElementById('q-progress').textContent = `Q ${room.currentQ + 1} / ${room.questionOrder.length}`;
+  document.getElementById('my-score').textContent = state.myScore + ' pts';
+  document.getElementById('hint-text').textContent = q.hint;
+  document.getElementById('question-text').textContent = q.question;
+  document.getElementById('feedback-overlay').className = 'feedback-overlay';
+  document.getElementById('feedback-overlay').textContent = '';
+  document.getElementById('fact-reveal').style.display = 'none';
+
+  const letters = ['A','B','C','D'];
+  const grid = document.getElementById('answers-grid');
+  grid.innerHTML = q.answers.map((ans, i) => `
+    <button class="answer-btn" onclick="submitAnswer(${i})" data-index="${i}">
+      <span class="answer-letter">${letters[i]}</span>
+      ${ans}
+    </button>
+  `).join('');
+
+  showScreen('game-screen');
+  startTimer(q);
+  startPolling();
+}
+
+// ══════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════
+function startTimer(q) {
+  clearTimer();
+  state.timeLeft = 20;
+  const bar = document.getElementById('timer-bar');
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  requestAnimationFrame(() => {
+    bar.style.transition = 'width 20s linear';
+    bar.style.width = '0%';
+  });
+
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    if (state.timeLeft <= 0) {
+      clearTimer();
+      if (!state.answered) timeUp(q);
+    }
+  }, 1000);
+}
+
+function clearTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+// ══════════════════════════════════════════
+// ANSWER SUBMISSION
+// ══════════════════════════════════════════
+function submitAnswer(index) {
+  if (state.answered) return;
+  state.answered = true;
+  clearTimer();
+
+  const room = getRoom(state.roomCode);
+  if (!room) return;
+  const qIndex = room.questionOrder[state.currentQ];
+  const q = QUESTIONS[qIndex];
+  const correct = index === q.correct;
+
+  // Score
+  let pts = 0;
+  if (correct) {
+    pts = Math.max(100, 100 + state.timeLeft * 10);
+    state.myScore += pts;
+  }
+
+  // Update room
+  if (!room.answers) room.answers = {};
+  room.answers[state.myId] = { index, correct, pts };
+  const me = room.players.find(p => p.id === state.myId);
+  if (me) me.score = state.myScore;
+  saveRoom(room);
+
+  // Visual feedback
+  revealAnswers(q, index, correct, pts);
+
+  document.getElementById('my-score').textContent = state.myScore + ' pts';
+
+  // Host triggers leaderboard after 3.5s
+  if (state.isHost) {
+    setTimeout(() => {
+      const r = getRoom(state.roomCode);
+      if (r) { r.status = 'leaderboard'; saveRoom(r); }
+      showLeaderboard(getRoom(state.roomCode));
+    }, 3500);
+  } else {
+    // Player waits for host to advance
+    setTimeout(() => {
+      startPolling();
+    }, 3500);
+  }
+}
+
+function timeUp(q) {
+  state.answered = true;
+  revealAnswers(q, -1, false, 0);
+  const room = getRoom(state.roomCode);
+  if (room) {
+    if (!room.answers) room.answers = {};
+    room.answers[state.myId] = { index: -1, correct: false, pts: 0 };
+    saveRoom(room);
+    if (state.isHost) {
+      setTimeout(() => {
+        const r = getRoom(state.roomCode);
+        if (r) { r.status = 'leaderboard'; saveRoom(r); }
+        showLeaderboard(getRoom(state.roomCode));
+      }, 3500);
+    }
+  }
+}
+
+function revealAnswers(q, selectedIndex, correct, pts) {
+  const btns = document.querySelectorAll('.answer-btn');
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('correct');
+    else if (i === selectedIndex) btn.classList.add('wrong');
+    else btn.classList.add('revealed');
+  });
+
+  const fb = document.getElementById('feedback-overlay');
+  if (selectedIndex === -1) {
+    fb.textContent = "⏱ Time's up!";
+    fb.className = 'feedback-overlay wrong-fb show';
+  } else if (correct) {
+    fb.textContent = `✓ Correct! +${pts} points`;
+    fb.className = 'feedback-overlay correct-fb show';
+  } else {
+    fb.textContent = '✗ Incorrect';
+    fb.className = 'feedback-overlay wrong-fb show';
+  }
+
+  const factBox = document.getElementById('fact-reveal');
+  factBox.innerHTML = `<div class="fact-label">📖 Historical Note</div>${q.fact}`;
+  factBox.style.display = 'block';
+}
+
+// ══════════════════════════════════════════
+// LEADERBOARD
+// ══════════════════════════════════════════
+function showLeaderboard(room) {
+  stopPolling();
+  const sorted = [...room.players].sort((a, b) => b.score - a.score);
+  const qNum = room.currentQ + 1;
+  const total = room.questionOrder.length;
+
+  document.getElementById('lb-subtitle').textContent =
+    `After Question ${qNum} of ${total}`;
+
+  const ul = document.getElementById('lb-list');
+  ul.innerHTML = sorted.map((p, i) => `
+    <li class="lb-item rank-${i+1}">
+      <span class="lb-rank">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)}</span>
+      <span class="lb-name">${p.name}${p.id === state.myId ? ' (you)' : ''}</span>
+      <span class="lb-score">${p.score} pts</span>
+    </li>
+  `).join('');
+
+  if (state.isHost) {
+    document.getElementById('lb-host-controls').style.display = 'block';
+    document.getElementById('lb-player-waiting').style.display = 'none';
+    document.getElementById('lb-host-controls').querySelector('button').textContent =
+      room.currentQ + 1 >= room.questionOrder.length ? 'See Final Results →' : 'Next Question →';
+  } else {
+    document.getElementById('lb-host-controls').style.display = 'none';
+    document.getElementById('lb-player-waiting').style.display = 'block';
+    startPolling();
+  }
+
+  showScreen('leaderboard-screen');
+}
+
+// ══════════════════════════════════════════
+// FINAL SCREEN
+// ══════════════════════════════════════════
+function showFinal(room) {
+  stopPolling();
+  const sorted = [...room.players].sort((a, b) => b.score - a.score);
+  const winner = sorted[0];
+
+  document.getElementById('final-winner-name').textContent = winner.name;
+
+  const ul = document.getElementById('final-lb-list');
+  ul.innerHTML = sorted.map((p, i) => `
+    <li class="lb-item rank-${i+1}">
+      <span class="lb-rank">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)}</span>
+      <span class="lb-name">${p.name}${p.id === state.myId ? ' (you)' : ''}</span>
+      <span class="lb-score">${p.score} pts</span>
+    </li>
+  `).join('');
+
+  if (state.isHost) {
+    document.getElementById('play-again-btn').style.display = 'inline-flex';
+    document.getElementById('host-name-input').value = state.myName;
+  }
+
+  showScreen('final-screen');
+}
+
+// ══════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════
+function resetAll() {
+  stopPolling();
+  clearTimer();
+  if (state.roomCode) localStorage.removeItem('room_' + state.roomCode);
+  state = {
+    isHost: false, myName: '', roomCode: '', players: [], myId: '',
+    currentQ: 0, answered: false, myScore: 0,
+    timerInterval: null, timeLeft: 20, questionOrder: []
+  };
+  lastStatus = null; lastQ = -1; lastPlayerCount = 0;
+}
+</script>
+</body>
+</html>
